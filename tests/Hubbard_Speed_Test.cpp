@@ -6,39 +6,75 @@
 #include <boost/test/included/unit_test.hpp>  // include this to get main(), otherwise the compiler will complain
 
 
-/** Read a matrix from a given file name, and put the values in a given matrix.
- */
-void read_matrix_from_file(const std::string& filename, arma::mat& M) {
-    arma::uword dim = M.n_rows;
 
+
+BOOST_AUTO_TEST_CASE ( speed_test ) {
+    std::clock_t start = std::clock();
+    std::string path = "/Users/wulfix/Desktop/Cursussen_Gent/ThesisDir/Libraries/HubbardLibs/Hubbard_Head";
+    std::string filename = path + "/tests/input_data/randomized_fourring_input.txt";
+    std::string fileout = path +"/tests/test_output/randomized_fourring_output.txt";;
     std::ifstream is (filename);
+    int counter = 0;
+    std::ofstream outfile (fileout);
+    outfile<<std::setprecision(12);
+    arma::uword dim = 4;
+    unsigned long elec = 4;
+    unsigned long dimalt = 4;
+    Lattice def = Lattice(dimalt);
+    Hubbard instant = Hubbard(elec,def);
+    char delimiter_char = ',';
     if (is.is_open()) {
-        for (arma::uword i = 0; i < dim; i++) {
-            for (arma::uword j = 0; j < dim; j++) {
-                is >> M(i,j);
+        std::string line;
+        while(std::getline(is, line)){
+            try {
+                counter++;
+
+                arma::mat M = arma::zeros(dim, dim);
+
+                // Read in the upper triangular part of the hopping matrix.
+                // It is located on one line, so we can read in that line, and then break it down.
+                std::stringstream linestream(
+                        line); // convert the read line into a stringstream to perform std::getline() on it
+
+
+                // The actual loop to read the upper triangular part of the hopping matrix
+                for (arma::uword i = 0; i < dim; i++) {
+                    for (arma::uword j = i; j < dim; j++) {
+                        std::string value_as_string;
+                        std::getline(linestream, value_as_string, delimiter_char);
+                        M(i, j) = std::stod(value_as_string);
+                    }
+                }
+                M = arma::symmatu(M);
+                Lattice thisIn = Lattice(M);
+                //std::clock_t start = std::clock();
+                instant.setLattice(thisIn);
+                //std::clock_t end = std::clock();
+                //std::cout<<std::endl<<(end-start)<<" time for all";
+                std::vector<State> ground = instant.getGroundstates();
+                outfile << ground.at(0).eigenValue << std::endl;
+            }catch(const std::invalid_argument& ia){
+                std::cerr << "Invalid argument: " << ia.what() << '\n';
+                std::cout<<std::endl<<counter<<" WTF";
+
             }
+
+
+
+
+
+
+
+
         }
         is.close();
-    }
-}
+        outfile.close();
+    } else std::cout << "Unable to open file";
 
 
-BOOST_AUTO_TEST_CASE ( reference_to_lattice ) {
+    std::clock_t end = std::clock();
+    std::cout<<std::endl<<(end-start)<<" time for all";
 
-    // We don't want any copies to be made when creating a HubbardClass instance.
-    arma::umat A = {{0, 1, 1},
-                    {1, 0, 1},
-                    {1, 1, 0}};
-    double t = 1.0;
-    double U = 4.0;
-    Lattice lattice(A, t, U);
 
-    size_t N = 2;
 
-    Hubbard h(N, lattice);    // h1: even number of electrons
-
-    // We can test that there is no copy by requiring that the addresses of the lattices are equal.
-    // CONFIRMED: This test fails if in HubbardClass.hpp
-    //      const Lattice& lattice;     is replaced with        const Lattice lattice;
-    BOOST_CHECK_EQUAL(&lattice,&h.getLattice());
 }
