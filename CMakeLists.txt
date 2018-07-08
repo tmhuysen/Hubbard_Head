@@ -5,7 +5,7 @@ project(Hubbard_Head VERSION 0.0.1
 set(CMAKE_CXX_STANDARD 11)
 
 # Use level-2 compiler optimization, since Armadillo really benefits from this
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 
 # Set CMake variables
 include(${CMAKE_SOURCE_DIR}/cmake/SetCMakeEnvironment.cmake)

@@ -41,4 +41,7 @@ BOOST_AUTO_TEST_CASE ( reference_to_lattice ) {
     // CONFIRMED: This test fails if in HubbardClass.hpp
     //      const Lattice& lattice;     is replaced with        const Lattice lattice;
     BOOST_CHECK_EQUAL(&lattice,&h.getLattice());
+    
+    
+    
 }
